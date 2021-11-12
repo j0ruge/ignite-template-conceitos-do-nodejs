@@ -20,6 +20,17 @@ function checksExistsUserAccount(request, response, next) {
   return next();
  }
 
+ function checksExistTodo(user, id){
+  const idAlreadyExist = user.todos.some(
+    (todo) => todo.id === id
+  );
+  if (!idAlreadyExist) {
+    return response.status(400).json({error: "ID not found"});
+  }
+  const todo = user.todos.find( todo => todo.id === id );
+  return todo;
+ }
+
 app.post('/users', (request, response) => {
   const { name, username } = request.body;
   const userAlreadyExist = users.some(
@@ -65,20 +76,18 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   const { id } = request.params;
   const { title, deadline } = request.body;
   const { user } = request;  
-  const idAlreadyExist = user.todos.some(
-    (todo) => todo.id === id
-  );
-  if (!idAlreadyExist) {
-    return response.status(400).json({error: "ID not found"});
-  }
-  const todo = user.todos.find( todo => todo.id === id );
+  const todo = checksExistTodo(user, id);  
   todo.title = title;
   todo.deadline = deadline;  
   return response.status(201).json(todo);
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { id } = request.params;
+  const { user } = request;
+  const todo = checksExistTodo(user, id);
+  todo.done = true;
+  return response.status(201).json(todo);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
